@@ -20,15 +20,20 @@ jobs:
       - name: Cross-repo probes
         env:
           TARGET_REPO: lamingwearehackerone/bb-private2-d06e1dcb
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -u
           api() {
             path="$1"
             echo "== GET $path"
-            code=$(curl -sS -o resp.json -w '%{http_code}'               -H "Authorization: Bearer $GITHUB_TOKEN"               -H "Accept: application/vnd.github+json"               "https://api.github.com$path")
+            code=$(curl -sS -o resp.json -w '%{http_code}'               -H "Authorization: Bearer $GH_TOKEN"               -H "Accept: application/vnd.github+json"               "https://api.github.com$path")
             echo "code=$code"
             head -c 300 resp.json; echo
           }
+          # control: same-repo should be allowed
+          api "/repos/$GITHUB_REPOSITORY"
+
+          # cross-repo should be denied (expect 404/403)
           api "/repos/$TARGET_REPO"
           api "/repos/$TARGET_REPO/contents/README.md"
           api "/repos/$TARGET_REPO/actions/secrets/public-key"
