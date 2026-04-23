@@ -13,7 +13,6 @@ jobs:
       actions: read
       issues: read
       pull-requests: read
-      metadata: read
     steps:
       - name: Context
         run: |
